@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gas Manager Pro V7</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;background:#f0f4f8;min-height:100vh}
+
+/* ====== AUTH ====== */
+#authScreen{display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:40px 16px 60px;overflow-y:auto;background:linear-gradient(135deg,#0d47a1,#1976d2,#42a5f5)}
+.auth-card{background:#fff;border-radius:24px;padding:32px 24px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.3);flex-shrink:0}
+.auth-logo{text-align:center;margin-bottom:22px}
+.auth-logo .flame{font-size:50px}
+.auth-logo h1{font-size:22px;font-weight:900;color:#0d47a1}
+.auth-logo p{font-size:11px;color:#aaa;margin-top:3px}
+.auth-tabs{display:flex;background:#f0f4f8;border-radius:12px;padding:4px;margin-bottom:22px;gap:4px}
+.auth-tab{flex:1;padding:10px;border:none;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;background:transparent;color:#999;transition:all .2s}
+.auth-tab.active{background:#fff;color:#1976d2;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.auth-field{margin-bottom:14px}
+.auth-field label{font-size:10px;font-weight:700;color:#666;display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.auth-field input{width:100%;padding:12px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;outline:none;transition:border .2s;background:#fafafa}
+.auth-field input:focus{border-color:#1976d2;background:#fff}
+.auth-btn{width:100%;padding:14px;background:#1976d2;color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:all .2s}
+.auth-btn:hover{background:#0d47a1;box-shadow:0 6px 20px rgba(25,118,210,.4)}
+.auth-msg{font-size:12px;text-align:center;margin-top:10px;min-height:18px;font-weight:600}
+.auth-msg.err{color:#f44336}.auth-msg.ok{color:#4caf50}
+.owner-hint{text-align:center;margin-top:16px;font-size:11px;color:#ccc;border-top:1px solid #f0f0f0;padding-top:14px}
+
+/* ====== OWNER PANEL ====== */
+#ownerPanel{display:none;min-height:100vh;background:#f5f5f5}
+.owner-hdr{background:linear-gradient(135deg,#880e4f,#c2185b,#e91e63);color:#fff;padding:16px;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.owner-hdr-top{display:flex;justify-content:space-between;align-items:center}
+.owner-hdr-top h2{font-size:18px;font-weight:900}
+.owner-hdr-top p{font-size:11px;opacity:.75;margin-top:2px}
+.o-logout{padding:9px 16px;background:rgba(255,255,255,.25);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:background .2s}
+.o-logout:hover{background:rgba(255,255,255,.4)}
+.o-stats{display:flex;gap:8px;padding:12px 0 0;overflow-x:auto}
+.o-stat{background:rgba(255,255,255,.15);border-radius:12px;padding:10px 14px;text-align:center;min-width:80px}
+.o-stat b{display:block;font-size:22px;font-weight:900}.o-stat span{font-size:10px;opacity:.85;text-transform:uppercase}
+.o-search-bar{padding:12px 16px}
+.o-search-bar input{width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none}
+.o-search-bar input:focus{border-color:#c2185b}
+.o-chips{display:flex;gap:6px;padding:0 16px 10px;overflow-x:auto}
+.chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid #e0e0e0;background:#fff;color:#888;transition:all .2s;white-space:nowrap}
+.chip.active{background:#c2185b;color:#fff;border-color:#c2185b}
+.o-list{padding:0 16px 80px}
+.acc-card{background:#fff;border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.acc-top{display:flex;align-items:center;gap:12px;padding:14px 14px 10px}
+.acc-av{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#fff;flex-shrink:0}
+.acc-av.approved{background:linear-gradient(135deg,#43a047,#66bb6a)}
+.acc-av.pending{background:linear-gradient(135deg,#fb8c00,#ffa726)}
+.acc-av.blocked{background:linear-gradient(135deg,#e53935,#ef5350)}
+.acc-info .acc-name{font-size:15px;font-weight:800;color:#222}
+.acc-info .acc-un{font-size:11px;color:#888;font-family:monospace}
+.s-badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase}
+.s-badge.approved{background:#e8f5e9;color:#2e7d32}.s-badge.pending{background:#fff8e1;color:#e65100}.s-badge.blocked{background:#ffebee;color:#c62828}
+.acc-body{padding:0 14px 10px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.acc-row{background:#f9f9f9;border-radius:8px;padding:7px 10px}
+.acc-row.full{grid-column:1/-1}
+.acc-row .rl{font-size:10px;color:#aaa;font-weight:700;text-transform:uppercase;margin-bottom:2px}
+.acc-row .rv{font-size:13px;font-weight:600;color:#333;word-break:break-all}
+.acc-row .rv.pw{font-family:monospace;background:#fff3e0;color:#bf360c;padding:1px 6px;border-radius:5px}
+.acc-feet{padding:10px 14px 14px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid #f5f5f5}
+.a-btn{flex:1;min-width:80px;padding:9px 6px;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s}
+.a-btn.ap{background:#e8f5e9;color:#2e7d32}.a-btn.ap:hover{background:#43a047;color:#fff}
+.a-btn.dp{background:#fff3e0;color:#e65100}.a-btn.dp:hover{background:#fb8c00;color:#fff}
+.a-btn.bl{background:#ffebee;color:#c62828}.a-btn.bl:hover{background:#e53935;color:#fff}
+.a-btn.rm{background:#fce4ec;color:#880e4f}.a-btn.rm:hover{background:#c2185b;color:#fff}
+.empty-st{text-align:center;padding:60px 20px;color:#ccc}
+.empty-st div{font-size:52px;margin-bottom:10px}
+
+/* ====== MAIN APP ====== */
+#mainApp{display:none;padding-bottom:70px}
+.app-hdr{background:#1976d2;color:#fff;position:sticky;top:0;z-index:40;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.app-hdr-top{display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px}
+.app-title{font-size:16px;font-weight:900}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.user-chip{background:rgba(255,255,255,.18);padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px}
+/* FIXED LOGOUT BUTTON */
+.logout-btn{background:#ef5350;border:none;color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;transition:background .2s}
+.logout-btn:hover{background:#c62828}
+.hdr-actions{display:flex;gap:6px;padding:0 14px 10px}
+.hdr-actions button{flex:1;padding:8px 4px;border:none;border-radius:8px;background:rgba(255,255,255,.2);color:#fff;font-weight:700;font-size:11px;cursor:pointer;transition:background .2s}
+.hdr-actions button:hover{background:rgba(255,255,255,.35)}
+#searchInput{width:calc(100% - 28px);margin:0 14px 12px;padding:11px 14px;border:none;border-radius:10px;font-size:14px;outline:none;display:block}
+
+/* BOTTOM TABS */
+.btm-tabs{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e0e0e0;display:flex;z-index:40;box-shadow:0 -2px 12px rgba(0,0,0,.08)}
+.btm-tab{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;font-size:10px;font-weight:700;color:#999;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .2s}
+.btm-tab .ti{font-size:20px}
+.btm-tab.active{color:#1976d2}
+.btm-tab.active .ti{filter:drop-shadow(0 0 4px #1976d260)}
+
+/* PAGE SECTIONS */
+.page-section{display:none}.page-section.active{display:block}
+
+/* CUSTOMER LIST */
+mark{background:#ffeb3b;color:black;padding:0 2px;border-radius:2px}
+.list-tabs{display:flex;background:#fff}
+.list-tabs button{flex:1;padding:12px;border:none;background:none;font-weight:700;color:#999;cursor:pointer;font-size:13px}
+.list-tabs button.active{color:#1976d2;border-bottom:3px solid #1976d2}
+.dash-row{display:flex;gap:10px;padding:10px}
+.d-box{flex:1;background:#fff;padding:12px;border-radius:12px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.05);font-size:12px;color:#666}
+.d-box b{display:block;font-size:22px;color:#1976d2;font-weight:900;margin-bottom:2px}
+.container{padding:10px}
+.c-card{background:#fff;border-radius:15px;padding:12px;margin-bottom:12px;display:flex;gap:12px;align-items:center;position:relative;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.sel-box{display:none;position:absolute;left:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;z-index:5}
+.sel-active{padding-left:45px!important}.sel-active .sel-box{display:block}
+.print-bar{display:none;background:#fff;padding:12px 14px;border-bottom:2px solid #1976d2;justify-content:space-between;align-items:center}
+.img-wrap{position:relative;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.sn-badge{background:#1976d2;color:#fff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:10px;margin-bottom:4px}
+.c-card img{width:75px;height:75px;border-radius:10px;object-fit:cover;background:#eee;border:1px solid #ddd}
+.c-details{flex:1;font-size:13px;line-height:1.4;min-width:0}
+.c-details b{font-size:16px;display:block;margin-bottom:2px;color:#333}
+.ptag{padding:2px 6px;border-radius:4px;font-weight:700;font-size:11px;background:#e3f2fd;color:#1976d2;display:inline-block;margin:2px 0}
+.c-actions{display:flex;flex-direction:column;gap:4px;min-width:80px}
+.c-actions button{border:none;padding:6px;border-radius:5px;color:#fff;font-size:11px;font-weight:700;cursor:pointer}
+.btn-rf{background:#4caf50}.btn-ed{background:#2196f3}.btn-hi{background:#757575}.btn-dl{background:#f44336}
+.fab{position:fixed;bottom:80px;right:20px;width:56px;height:56px;border-radius:50%;background:#1976d2;color:#fff;font-size:30px;border:none;box-shadow:0 5px 15px rgba(0,0,0,.3);cursor:pointer;z-index:39;display:flex;align-items:center;justify-content:center}
+
+/* ====== ANALYSIS PAGE ====== */
+.analysis-wrap{padding:14px}
+.an-card{background:#fff;border-radius:16px;margin-bottom:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.an-card-hdr{background:#1976d2;color:#fff;padding:14px 16px}
+.an-card-hdr h3{font-size:15px;font-weight:900}
+.an-card-hdr p{font-size:11px;opacity:.8;margin-top:2px}
+.an-card-body{padding:16px}
+.date-row{display:flex;gap:10px;margin-bottom:14px}
+.date-field{flex:1}
+.date-field label{font-size:10px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:5px}
+.date-field input{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none;transition:border .2s}
+.date-field input:focus{border-color:#1976d2}
+.search-btn{width:100%;padding:12px;background:#1976d2;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s}
+.search-btn:hover{background:#0d47a1}
+.an-stat-row{display:flex;gap:8px;margin-bottom:14px}
+.an-stat{flex:1;background:#e3f2fd;border-radius:12px;padding:12px;text-align:center}
+.an-stat b{display:block;font-size:24px;font-weight:900;color:#1565c0}
+.an-stat span{font-size:10px;color:#1976d2;font-weight:700;text-transform:uppercase}
+.an-result-item{border:1px solid #e0e0e0;border-radius:12px;margin-bottom:10px;overflow:hidden}
+.an-result-hdr{background:#f5f5f5;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.an-result-hdr img{width:40px;height:40px;border-radius:8px;object-fit:cover;background:#ddd;border:1px solid #ccc}
+.an-result-hdr .rn{font-weight:800;font-size:14px;color:#222}
+.an-result-hdr .ri{font-size:11px;color:#888;font-family:monospace}
+.an-refill-badge{background:#1976d2;color:#fff;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;margin-left:auto;white-space:nowrap}
+.an-logs{padding:8px 14px 12px}
+.an-log-row{padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:12px;color:#555;display:flex;align-items:center;gap:8px}
+.an-log-row:last-child{border:none}
+.an-log-row::before{content:'⛽';font-size:14px}
+.no-result{text-align:center;padding:40px 20px;color:#bbb}
+.no-result div{font-size:48px;margin-bottom:10px}
+
+/* ====== BAR CHART ====== */
+.chart-wrap{padding:0 4px}
+.chart-canvas-wrap{width:100%;overflow-x:auto}
+canvas#barChart{display:block}
+.chart-legend{display:flex;justify-content:center;gap:16px;margin-top:10px;font-size:11px;color:#666;font-weight:700}
+.legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px}
+
+/* ====== MODALS ====== */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:200;overflow-y:auto}
+.m-form{background:#fff;margin:20px auto;padding:20px;width:95%;max-width:400px;border-radius:20px;box-sizing:border-box;position:relative}
+.close-btn{position:absolute;top:10px;right:15px;background:none;border:none;color:#f44336;font-size:28px;font-weight:700;cursor:pointer;line-height:1}
+label{font-size:12px;font-weight:700;color:#555;display:block;margin-top:10px}
+input,textarea,select{width:100%;padding:10px;margin:5px 0 10px;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;font-size:13px}
+.clr-btn{font-size:10px;color:red;cursor:pointer;text-decoration:underline;float:right}
+
+/* ====== TOAST ====== */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#212121;color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:700;z-index:9999;display:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+
+@media print{
+  body *{visibility:hidden}
+  #printArea,#printArea *{visibility:visible}
+  #printArea{position:absolute;left:0;top:0;width:100%!important;display:block!important}
+  .print-card{display:flex;border-bottom:2px solid #000;padding:15px 0;page-break-inside:avoid;width:100%;gap:15px}
+  .print-imgs{width:110px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+  .print-card img{width:110px;height:110px;object-fit:cover;border:1px solid #000;border-radius:5px}
+  .print-details{flex:2;font-size:13px;line-height:1.5}
+  .print-history{flex:1.5;font-size:11px;border-left:1px solid #000;padding-left:10px}
+}
+</style>
+</head>
+<body>
+<div id="printArea" style="display:none"></div>
+
+<!-- ====================================================== -->
+<!--                     AUTH SCREEN                        -->
+<!-- ====================================================== -->
+<div id="authScreen">
+ <div class="auth-card">
+  <div class="auth-logo"><div class="flame">⛽</div><h1>Gas Manager Pro</h1><p>V7.0 — Multi-User + Analysis</p></div>
+  <div class="auth-tabs">
+   <button class="auth-tab active" id="tabLogin">Login</button>
+   <button class="auth-tab" id="tabSignup">Sign Up</button>
+  </div>
+  <!-- LOGIN -->
+  <div id="loginForm">
+   <div class="auth-field">
+    <label>Username or Owner Code</label>
+    <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
+   </div>
+   <div id="passField" class="auth-field">
+    <label>Password</label>
+    <input type="password" id="loginPass" placeholder="Enter password">
+   </div>
+   <button class="auth-btn" id="btnDoLogin">Sign In →</button>
+   <div class="auth-msg err" id="loginErr"></div>
+   <div class="owner-hint">🔑 Owner? Just type your special code above</div>
+  </div>
+  <!-- SIGNUP -->
+  <div id="signupForm" style="display:none">
+   <div class="auth-field"><label>Full Name</label><input type="text" id="suName" placeholder="Your full name"></div>
+   <div class="auth-field"><label>Username</label><input type="text" id="suUser" placeholder="Choose username" autocomplete="off"></div>
+   <div class="auth-field"><label>Password</label><input type="password" id="suPass" placeholder="Min. 4 characters"></div>
+   <div class="auth-field"><label>Confirm Password</label><input type="password" id="suPass2" placeholder="Repeat password"></div>
+   <button class="auth-btn" id="btnDoSignup">Create Account →</button>
+   <div class="auth-msg" id="signupMsg"></div>
+  </div>
+ </div>
+</div>
+
+<!-- ====================================================== -->
+<!--                    OWNER PANEL                         -->
+<!-- ====================================================== -->
+<div id="ownerPanel">
+ <div class="owner-hdr">
+  <div class="owner-hdr-top">
+   <div><h2>👑 Owner Dashboard</h2><p>Manage all user accounts</p></div>
+   <button class="o-logout" onclick="ownerLogout()">⏻ Sign Out</button>
+  </div>
+  <div class="o-stats">
+   <div class="o-stat"><b id="oTotal">0</b><span>Total</span></div>
+   <div class="o-stat"><b id="oApproved">0</b><span>Approved</span></div>
+   <div class="o-stat"><b id="oPending">0</b><span>Pending</span></div>
+   <div class="o-stat"><b id="oBlocked">0</b><span>Blocked</span></div>
+  </div>
+ </div>
+ <div class="o-search-bar"><input type="text" id="ownerSearch" placeholder="🔍  Search name or username…" oninput="renderOwnerList()"></div>
+ <div class="o-chips">
+  <div class="chip active" data-f="all" onclick="setOwnerFilter('all')">All</div>
+  <div class="chip" data-f="pending" onclick="setOwnerFilter('pending')">⏳ Pending</div>
+  <div class="chip" data-f="approved" onclick="setOwnerFilter('approved')">✅ Approved</div>
+  <div class="chip" data-f="blocked" onclick="setOwnerFilter('blocked')">🚫 Blocked</div>
+ </div>
+ <div class="o-list" id="ownerList"></div>
+</div>
+
+<!-- ====================================================== -->
+<!--                     MAIN APP                           -->
+<!-- ====================================================== -->
+<div id="mainApp">
+ <div class="app-hdr">
+  <div class="app-hdr-top">
+   <div class="app-title">⛽ Gas Manager Pro</div>
+   <div class="hdr-right">
+    <div class="user-chip">👤 <span id="appUserName">User</span></div>
+    <!-- FIXED: dedicated visible logout button -->
+    <button class="logout-btn" onclick="doUserLogout()">⏻ Logout</button>
+   </div>
+  </div>
+  <div class="hdr-actions" id="hdrActions">
+   <button onclick="exportToZip()">📦 Export</button>
+   <button onclick="document.getElementById('importFile').click()">📥 Import</button>
+   <button onclick="enableSelMode()">🖨 Print</button>
+  </div>
+  <input id="searchInput" placeholder="🔍  Search customers…" onkeyup="renderList()">
+ </div>
+
+ <div id="printBar" class="print-bar">
+  <label style="margin:0"><input type="checkbox" id="selAll" onclick="toggleSelAll()"> Select All</label>
+  <div style="display:flex;gap:8px">
+   <button onclick="generatePDF()" class="btn-rf" style="padding:8px 15px;border-radius:8px">PDF</button>
+   <button onclick="disableSelMode()" class="btn-dl" style="padding:8px 15px;border-radius:8px">Exit</button>
+  </div>
+ </div>
+ <input type="file" id="importFile" hidden onchange="previewImport(event)">
+
+ <!-- ========= CUSTOMER LIST SECTION ========= -->
+ <div class="page-section active" id="secList">
+  <div class="list-tabs">
+   <button id="ltAll" class="active" onclick="switchListTab('all')">All List</button>
+   <button id="ltExp" onclick="switchListTab('expired')">Expired Pipes</button>
+  </div>
+  <div class="dash-row">
+   <div class="d-box"><b id="totalC">0</b>Customers</div>
+   <div class="d-box"><b id="totalR">0</b>Total Refills</div>
+   <div class="d-box"><b id="totalE">0</b>Expired</div>
+  </div>
+  <div class="container" id="custList"></div>
+ </div>
+
+ <!-- ========= ANALYSIS SECTION ========= -->
+ <div class="page-section" id="secAnalysis">
+  <div class="analysis-wrap">
+
+   <!-- Date Range Filter -->
+   <div class="an-card">
+    <div class="an-card-hdr"><h3>🔍 Refill Analysis</h3><p>Search refills by date range</p></div>
+    <div class="an-card-body">
+     <div class="date-row">
+      <div class="date-field"><label>From Date</label><input type="date" id="anFrom"></div>
+      <div class="date-field"><label>To Date</label><input type="date" id="anTo"></div>
+     </div>
+     <button class="search-btn" onclick="runAnalysis()">🔍 Search Refills</button>
+    </div>
+   </div>
+
+   <!-- Stats -->
+   <div class="an-stat-row" id="anStats" style="display:none">
+    <div class="an-stat"><b id="anTotal">0</b><span>Total Refills</span></div>
+    <div class="an-stat"><b id="anCusts">0</b><span>Customers</span></div>
+   </div>
+
+   <!-- Results -->
+   <div id="anResults"></div>
+
+   <!-- Bar Chart -->
+   <div class="an-card" id="chartCard">
+    <div class="an-card-hdr"><h3>📊 Monthly Refill Chart</h3><p>Refills per month (last 12 months)</p></div>
+    <div class="an-card-body">
+     <div class="chart-canvas-wrap">
+      <canvas id="barChart" height="220"></canvas>
+     </div>
+     <div class="chart-legend">
+      <span><span class="legend-dot" style="background:#1976d2"></span>Refills</span>
+     </div>
+    </div>
+   </div>
+
+  </div>
+ </div>
+
+ <!-- FAB -->
+ <button class="fab" onclick="openEntryModal()">+</button>
+
+ <!-- BOTTOM TABS -->
+ <div class="btm-tabs">
+  <button class="btm-tab active" id="btList" onclick="showSection('list')">
+   <span class="ti">👥</span>Customers
+  </button>
+  <button class="btm-tab" id="btAnalysis" onclick="showSection('analysis')">
+   <span class="ti">📊</span>Analysis
+  </button>
+ </div>
+</div>
+
+<!-- ====================================================== -->
+<!--                   IMPORT PREVIEW MODAL                 -->
+<!-- ====================================================== -->
+<div class="modal" id="importModal">
+ <div class="m-form" style="max-width:440px">
+  <button class="close-btn" onclick="closeImportModal()">✖</button>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+   <div style="width:44px;height:44px;background:#e3f2fd;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📥</div>
+   <div>
+    <div style="font-size:16px;font-weight:900;color:#222">Import File</div>
+    <div style="font-size:11px;color:#888;margin-top:2px">Review before importing</div>
+   </div>
+  </div>
+
+  <!-- File info card -->
+  <div id="impFileCard" style="background:#f5f9ff;border:1.5px solid #bbdefb;border-radius:12px;padding:12px 14px;margin-bottom:14px">
+   <div style="display:flex;align-items:center;gap:10px">
+    <span id="impFileIcon" style="font-size:28px">📄</span>
+    <div style="flex:1;min-width:0">
+     <div id="impFileName" style="font-weight:800;font-size:14px;color:#1565c0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+     <div id="impFileMeta" style="font-size:11px;color:#888;margin-top:2px">—</div>
+    </div>
+   </div>
+  </div>
+
+  <!-- Inside ZIP: file picker -->
+  <div id="impZipSection" style="display:none;margin-bottom:14px">
+   <div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">📦 Files inside ZIP</div>
+   <div id="impZipFiles" style="background:#f9f9f9;border:1px solid #e0e0e0;border-radius:10px;max-height:140px;overflow-y:auto"></div>
+  </div>
+
+  <!-- Preview count -->
+  <div id="impPreview" style="display:none;background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:10px;padding:10px 14px;margin-bottom:14px">
+   <div style="font-size:12px;font-weight:700;color:#2e7d32" id="impPreviewText">✅ Ready to import</div>
+  </div>
+
+  <!-- Error -->
+  <div id="impError" style="display:none;background:#ffebee;border:1.5px solid #ef9a9a;border-radius:10px;padding:10px 14px;margin-bottom:14px">
+   <div style="font-size:12px;font-weight:700;color:#c62828" id="impErrorText">❌ Error</div>
+  </div>
+
+  <button id="impConfirmBtn" onclick="confirmImport()" style="width:100%;padding:13px;background:#1976d2;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s" disabled>
+   📥 Import Now
+  </button>
+  <button onclick="closeImportModal()" style="width:100%;padding:10px;background:#f5f5f5;color:#666;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px">
+   Cancel
+  </button>
+ </div>
+</div>
+
+<!-- ====================================================== -->
+<!--                      MODALS                            -->
+<!-- ====================================================== -->
+<!-- Entry Modal -->
+<div class="modal" id="entryModal">
+ <div class="m-form">
+  <button class="close-btn" onclick="closeEntryModal()">✖</button>
+  <h3 style="margin-bottom:10px">Record Entry</h3>
+  <input type="hidden" id="idx">
+  <label>Customer Photo <span class="clr-btn" onclick="clearImg('photo')">Clear</span></label>
+  <input type="file" id="photo" accept="image/*">
+  <input id="eName" placeholder="Full Name">
+  <input id="eCid" placeholder="Consumer ID">
+  <input id="ePhone" placeholder="Phone">
+  <input id="eAddon" placeholder="Add-On Info">
+  <textarea id="eAddress" placeholder="Address"></textarea>
+  <div style="display:flex;gap:10px">
+   <div style="flex:1"><label>Buy Date</label><input type="date" id="eBuyDate" onchange="calcExpiry()"></div>
+   <div style="flex:1"><label>Expiry</label><input type="date" id="ePipe"></div>
+  </div>
+  <label>Paper Location</label>
+  <select id="ePaper"><option value="My Home">My Home</option><option value="Customer Home">Customer Home</option></select>
+  <label>Document Image <span class="clr-btn" onclick="clearImg('paperPhoto')">Clear</span></label>
+  <input type="file" id="paperPhoto" accept="image/*">
+  <button onclick="saveEntry()" class="btn-rf" style="width:100%;padding:12px;margin-top:10px;border-radius:10px;font-size:14px;font-weight:700;border:none;color:#fff;cursor:pointer">💾 Save</button>
+ </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal" id="histModal">
+ <div class="m-form">
+  <button class="close-btn" onclick="document.getElementById('histModal').style.display='none'">✖</button>
+  <h3 style="margin-bottom:10px">Refill History</h3>
+  <div id="proofView"></div>
+  <div id="histRows" style="max-height:300px;overflow-y:auto"></div>
+ </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ============================================================
+//  ⚙️  CONFIG — SET YOUR RAILWAY URL HERE AFTER DEPLOYMENT
+// ============================================================
+const API_BASE = 'https://YOUR-RAILWAY-URL.railway.app';
+
+// ============================================================
+//  STATE
+// ============================================================
+const OWNER_CODE  = 'Gas9775';        // still used to hide password field in UI
+let authToken     = localStorage.getItem('gmp_token') || '';
+let curRole       = '';
+let curLoggedUser = '';
+let curLoggedName = '';
+let db            = [];               // customers array from API
+let listTab       = 'all';
+let selMode       = false;
+let curHistId     = -1;
+let ownerFilter   = 'all';
+let ownerUsers    = [];               // cached user list for owner panel
+
+// ============================================================
+//  API HELPER
+// ============================================================
+async function api(path, opts = {}) {
+  const { method = 'GET', body, noAuth = false } = opts;
+  const headers = { 'Content-Type': 'application/json' };
+  if (!noAuth && authToken) headers['Authorization'] = 'Bearer ' + authToken;
+
+  const res = await fetch(API_BASE + path, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined
+  });
+
+  const data = await res.json();
+
+  if (res.status === 401) {
+    authToken = '';
+    localStorage.removeItem('gmp_token');
+    showAuthScreen();
+    throw new Error(data.error || 'Session expired. Please login again.');
+  }
+  return data;
+}
+
+function showAuthScreen() {
+  document.getElementById('mainApp').style.display    = 'none';
+  document.getElementById('ownerPanel').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+// ============================================================
+//  AUTH TAB SWITCH
+// ============================================================
+function switchTab2(t) {
+  document.getElementById('tabLogin').classList.toggle('active',  t === 'login');
+  document.getElementById('tabSignup').classList.toggle('active', t === 'signup');
+  var lf = document.getElementById('loginForm');
+  var sf = document.getElementById('signupForm');
+  if (lf) lf.style.display = (t === 'login')  ? 'block' : 'none';
+  if (sf) sf.style.display = (t === 'signup') ? 'block' : 'none';
+  var le = document.getElementById('loginErr');
+  var sm = document.getElementById('signupMsg');
+  if (le) { le.textContent = ''; }
+  if (sm) { sm.textContent = ''; sm.className = 'auth-msg'; }
+  var as = document.getElementById('authScreen');
+  if (as) as.scrollTop = 0;
+}
+
+function checkOwner(v) {
+  document.getElementById('passField').style.display = (v === OWNER_CODE) ? 'none' : '';
+}
+
+// ============================================================
+//  LOGIN
+// ============================================================
+async function doLogin() {
+  const u     = document.getElementById('loginUser').value.trim();
+  const p     = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = '';
+
+  if (!u) { errEl.textContent = '⚠ Please enter your username.'; return; }
+
+  const btn = document.getElementById('btnDoLogin');
+  btn.disabled = true; btn.textContent = 'Signing in…';
+
+  try {
+    const data = await api('/api/auth/login', {
+      method: 'POST',
+      body: { username: u, password: p },
+      noAuth: true
+    });
+
+    if (!data.ok) { errEl.textContent = '❌ ' + data.error; return; }
+
+    authToken = data.token;
+    localStorage.setItem('gmp_token', authToken);
+    curRole       = data.role;
+    curLoggedName = data.name;
+    curLoggedUser = data.username || u;
+
+    if (data.role === 'owner') {
+      document.getElementById('authScreen').style.display  = 'none';
+      document.getElementById('ownerPanel').style.display  = 'block';
+      renderOwner();
+    } else {
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('mainApp').style.display    = 'block';
+      document.getElementById('appUserName').textContent  = data.name;
+      const today    = new Date().toISOString().split('T')[0];
+      const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+      document.getElementById('anFrom').value = monthAgo;
+      document.getElementById('anTo').value   = today;
+      loadData();
+    }
+  } catch (err) {
+    errEl.textContent = '❌ ' + (err.message || 'Connection failed. Is the server running?');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign In →';
+  }
+}
+
+// ============================================================
+//  SIGNUP
+// ============================================================
+async function doSignup() {
+  const name  = document.getElementById('suName').value.trim();
+  const uname = document.getElementById('suUser').value.trim();
+  const pass  = document.getElementById('suPass').value;
+  const pass2 = document.getElementById('suPass2').value;
+  const msg   = document.getElementById('signupMsg');
+  msg.className = 'auth-msg err'; msg.textContent = '';
+
+  if (!name || !uname || !pass || !pass2) { msg.textContent = '⚠ All fields are required.'; return; }
+  if (uname.length < 3) { msg.textContent = '⚠ Username min 3 characters.'; return; }
+  if (pass.length < 4)  { msg.textContent = '⚠ Password min 4 characters.'; return; }
+  if (pass !== pass2)   { msg.textContent = '❌ Passwords do not match.'; return; }
+  if (uname.toUpperCase() === OWNER_CODE.toUpperCase()) { msg.textContent = '❌ Reserved username.'; return; }
+
+  const btn = document.getElementById('btnDoSignup');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  try {
+    const data = await api('/api/auth/signup', {
+      method: 'POST',
+      body: { name, username: uname, password: pass },
+      noAuth: true
+    });
+
+    if (!data.ok) { msg.textContent = '❌ ' + data.error; return; }
+
+    ['suName','suUser','suPass','suPass2'].forEach(id => document.getElementById(id).value = '');
+    msg.className   = 'auth-msg ok';
+    msg.textContent = '✅ Account created! Waiting for owner approval.';
+    setTimeout(() => switchTab2('login'), 2000);
+  } catch (err) {
+    msg.textContent = '❌ ' + (err.message || 'Connection failed.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Account →';
+  }
+}
+
+// ============================================================
+//  LOGOUT
+// ============================================================
+function doUserLogout() {
+  if (!confirm('Sign out of Gas Manager Pro?')) return;
+  authToken = ''; curLoggedUser = ''; curLoggedName = ''; db = [];
+  localStorage.removeItem('gmp_token');
+  showAuthScreen();
+  document.getElementById('loginUser').value       = '';
+  document.getElementById('loginPass').value       = '';
+  document.getElementById('loginErr').textContent  = '';
+  document.getElementById('passField').style.display = '';
+  document.getElementById('custList').innerHTML    = '';
+  document.getElementById('anResults').innerHTML   = '';
+  document.getElementById('anStats').style.display = 'none';
+  showSection('list');
+}
+
+function ownerLogout() {
+  authToken = ''; curRole = '';
+  localStorage.removeItem('gmp_token');
+  showAuthScreen();
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('passField').style.display = '';
+}
+
+// ============================================================
+//  OWNER PANEL
+// ============================================================
+function setOwnerFilter(f) {
+  ownerFilter = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  renderOwnerList();
+}
+
+async function renderOwner() {
+  const list = document.getElementById('ownerList');
+  list.innerHTML = '<div class="empty-st"><div>⏳</div><p style="font-size:14px">Loading accounts…</p></div>';
+
+  try {
+    const data = await api('/api/owner/users');
+    if (!data.ok) {
+      list.innerHTML = `<div class="empty-st"><div>❌</div><p style="font-size:14px">${data.error}</p></div>`;
+      return;
+    }
+    ownerUsers = data.data;
+    document.getElementById('oTotal').textContent    = data.stats.total;
+    document.getElementById('oApproved').textContent = data.stats.approved;
+    document.getElementById('oPending').textContent  = data.stats.pending;
+    document.getElementById('oBlocked').textContent  = data.stats.blocked;
+    renderOwnerList();
+  } catch (err) {
+    list.innerHTML = '<div class="empty-st"><div>❌</div><p style="font-size:14px">Failed to load. Check connection.</p></div>';
+  }
+}
+
+function renderOwnerList() {
+  const q = (document.getElementById('ownerSearch')?.value || '').toLowerCase().trim();
+  const filtered = ownerUsers.filter(a => {
+    const mq = !q || a.name.toLowerCase().includes(q) || a.username.toLowerCase().includes(q);
+    const mf = ownerFilter === 'all' || a.status === ownerFilter;
+    return mq && mf;
+  });
+
+  const list = document.getElementById('ownerList');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-st"><div>${ownerUsers.length ? '🔍' : '👤'}</div><p style="font-size:14px">${ownerUsers.length ? 'No match.' : 'No accounts yet.'}</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(acc => {
+    const sl = acc.status === 'approved' ? '✅ Approved' : acc.status === 'blocked' ? '🚫 Blocked' : '⏳ Pending';
+    return `
+    <div class="acc-card">
+     <div class="acc-top">
+      <div class="acc-av ${acc.status}">${acc.name[0].toUpperCase()}</div>
+      <div class="acc-info" style="flex:1;min-width:0">
+       <div class="acc-name">${h(acc.name)}</div>
+       <div class="acc-un">@${h(acc.username)}</div>
+      </div>
+      <span class="s-badge ${acc.status}">${sl}</span>
+     </div>
+     <div class="acc-body">
+      <div class="acc-row"><div class="rl">Username</div><div class="rv" style="font-family:monospace;color:#1565c0">${h(acc.username)}</div></div>
+      <div class="acc-row"><div class="rl">Records</div><div class="rv">${acc.customer_count || 0} customers · ${acc.refill_count || 0} refills</div></div>
+      <div class="acc-row full"><div class="rl">Registered</div><div class="rv" style="color:#999;font-size:12px">${acc.created_at || 'N/A'}</div></div>
+     </div>
+     <div class="acc-feet">
+      ${acc.status !== 'approved' ? `<button class="a-btn ap" onclick="setStatus(${acc.id},'approved')">✅ Approve</button>` : ''}
+      ${acc.status === 'approved' ? `<button class="a-btn dp" onclick="setStatus(${acc.id},'pending')">⏸ Disapprove</button>` : ''}
+      ${acc.status !== 'blocked'  ? `<button class="a-btn bl" onclick="setStatus(${acc.id},'blocked')">🚫 Block</button>` : ''}
+      ${acc.status === 'blocked'  ? `<button class="a-btn ap" onclick="setStatus(${acc.id},'approved')">✅ Unblock</button>` : ''}
+      <button class="a-btn rm" onclick="removeAcc(${acc.id},'${h(acc.name)}')">🗑 Remove</button>
+     </div>
+    </div>`;
+  }).join('');
+}
+
+async function setStatus(id, s) {
+  try {
+    const data = await api(`/api/owner/users/${id}/status`, { method: 'PATCH', body: { status: s } });
+    if (!data.ok) { showToast('❌ ' + data.error); return; }
+    const u = ownerUsers.find(u => u.id === id);
+    if (u) u.status = s;
+    // Refresh stats
+    renderOwner();
+    showToast({ approved: '✅ Approved', pending: '⏸ Disapproved', blocked: '🚫 Blocked' }[s]);
+  } catch (err) { showToast('❌ Failed to update status.'); }
+}
+
+async function removeAcc(id, name) {
+  if (!confirm(`Remove account "${name}"? This cannot be undone.`)) return;
+  try {
+    const data = await api(`/api/owner/users/${id}`, { method: 'DELETE' });
+    if (!data.ok) { showToast('❌ ' + data.error); return; }
+    ownerUsers = ownerUsers.filter(u => u.id !== id);
+    renderOwner();
+    showToast('Account removed');
+  } catch (err) { showToast('❌ Failed to remove account.'); }
+}
+
+// ============================================================
+//  SECTION NAV
+// ============================================================
+function showSection(s) {
+  document.getElementById('secList').classList.toggle('active',     s === 'list');
+  document.getElementById('secAnalysis').classList.toggle('active', s === 'analysis');
+  document.getElementById('btList').classList.toggle('active',      s === 'list');
+  document.getElementById('btAnalysis').classList.toggle('active',  s === 'analysis');
+  document.getElementById('hdrActions').style.display    = s === 'list' ? 'flex' : 'none';
+  document.getElementById('searchInput').style.display   = s === 'list' ? 'block' : 'none';
+  if (s === 'analysis') drawBarChart();
+}
+
+// ============================================================
+//  LOAD DATA FROM API
+// ============================================================
+async function loadData() {
+  try {
+    const data = await api('/api/customers');
+    if (!data.ok) { showToast('❌ ' + data.error); return; }
+    db = data.data;
+    renderList();
+  } catch (err) {
+    showToast('❌ Failed to load data. Check connection.');
+  }
+}
+
+// ============================================================
+//  DATE HELPERS
+// ============================================================
+function fmtDate(iso) {
+  if (!iso) return 'N/A';
+  if (iso.includes('/')) return iso;
+  const [y, m, d] = iso.split('T')[0].split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function fmtDateTime(iso) {
+  if (!iso) return 'N/A';
+  const d   = new Date(iso);
+  const dd  = String(d.getDate()).padStart(2, '0');
+  const mm  = String(d.getMonth() + 1).padStart(2, '0');
+  const yy  = d.getFullYear();
+  const hh  = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm}/${yy}, ${hh}:${min}`;
+}
+
+function hl(txt, term) {
+  if (!term || !txt) return txt || 'N/A';
+  const re = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return txt.toString().replace(re, '<mark>$1</mark>');
+}
+
+// ============================================================
+//  CUSTOMER LIST RENDER
+// ============================================================
+function renderList() {
+  const list = document.getElementById('custList'); list.innerHTML = '';
+  let tR = 0, tE = 0;
+  const term = document.getElementById('searchInput').value.toLowerCase();
+
+  db.forEach((r, i) => {
+    const isExp = r.pipe_expiry && new Date(r.pipe_expiry) < new Date();
+    if (isExp) tE++;
+    tR += (r.refill_count || 0);
+    const buy  = fmtDate(r.buy_date);
+    const exp  = fmtDate(r.pipe_expiry);
+    const last = r.last_refill ? fmtDateTime(r.last_refill) : 'No Records';
+    const srch = `${r.name} ${r.cid} ${r.phone} ${r.address} ${r.addon} ${r.paper_loc} ${buy} ${exp} ${last}`.toLowerCase();
+    if (!srch.includes(term)) return;
+    if (listTab === 'expired' && !isExp) return;
+
+    list.innerHTML += `
+    <div class="c-card ${selMode ? 'sel-active' : ''}">
+     <input type="checkbox" class="sel-box" data-id="${r.id}">
+     <div class="img-wrap">
+      <span class="sn-badge">#${i + 1}</span>
+      <img src="${r.photo_data || 'https://via.placeholder.com/75'}">
+     </div>
+     <div class="c-details">
+      <b>${hl(r.name, term)}</b>
+      ID: ${hl(r.cid, term)}<br>
+      Ph: ${hl(r.phone, term)}<br>
+      <span class="ptag">Paper: ${hl(r.paper_loc, term)}</span><br>
+      Buy: ${hl(buy, term)} | Exp: <span style="color:${isExp ? 'red' : 'green'};font-weight:700">${hl(exp, term)}</span><br>
+      Refill: ${hl(last, term)} (${r.refill_count || 0} total)<br>
+      ${r.addon ? `<div style="color:#1976d2;font-weight:700;font-size:11px">Add-On: ${hl(r.addon, term)}</div>` : ''}
+      <div style="font-size:11px;color:#666;border-top:1px solid #eee;margin-top:4px;padding-top:4px">Add: ${hl(r.address, term)}</div>
+     </div>
+     <div class="c-actions">
+      <button class="btn-rf" onclick="doRefill(${r.id})">Refill</button>
+      <button class="btn-ed" onclick="openEntryModal(${r.id})">Edit</button>
+      <button class="btn-hi" onclick="showHistory(${r.id})">History</button>
+      <button class="btn-dl" onclick="delCust(${r.id})">Del</button>
+     </div>
+    </div>`;
+  });
+
+  document.getElementById('totalC').innerText = db.length;
+  document.getElementById('totalR').innerText = tR;
+  document.getElementById('totalE').innerText = tE;
+}
+
+// ============================================================
+//  ANALYSIS — DATE RANGE  (uses server-side query)
+// ============================================================
+async function runAnalysis() {
+  const fromStr = document.getElementById('anFrom').value;
+  const toStr   = document.getElementById('anTo').value;
+  if (!fromStr || !toStr) { showToast('⚠ Select both dates'); return; }
+  if (fromStr > toStr)    { showToast('⚠ From date must be before To date'); return; }
+
+  try {
+    // customer_id=0 in URL — backend ignores it and queries all customers for the user
+    const data = await api(`/api/customers/0/refills/range?from=${fromStr}&to=${toStr}`);
+    if (!data.ok) { showToast('❌ ' + data.error); return; }
+
+    document.getElementById('anTotal').textContent    = data.totalRefills;
+    document.getElementById('anCusts').textContent    = data.customerCount;
+    document.getElementById('anStats').style.display  = 'flex';
+
+    if (!data.data.length) {
+      document.getElementById('anResults').innerHTML =
+        `<div class="no-result"><div>📭</div><p>No refills found between<br><b>${fmtDate(fromStr)}</b> and <b>${fmtDate(toStr)}</b></p></div>`;
+      return;
+    }
+
+    document.getElementById('anResults').innerHTML = data.data.map(r => {
+      const dates = r.refill_dates ? r.refill_dates.split('||') : [];
+      return `
+      <div class="an-result-item">
+       <div class="an-result-hdr">
+        <img src="${r.photo_data || 'https://via.placeholder.com/40'}">
+        <div>
+         <div class="rn">${h(r.name)}</div>
+         <div class="ri">ID: ${h(r.cid || '—')} | Ph: ${h(r.phone || '—')}</div>
+        </div>
+        <span class="an-refill-badge">⛽ ${r.refill_count} Refill${r.refill_count > 1 ? 's' : ''}</span>
+       </div>
+       <div class="an-logs">
+        ${dates.map(d => `<div class="an-log-row">${h(fmtDateTime(d))}</div>`).join('')}
+       </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    showToast('❌ Analysis failed. Check connection.');
+  }
+}
+
+// ============================================================
+//  BAR CHART — Monthly refills (last 12 months via API)
+// ============================================================
+async function drawBarChart() {
+  const canvas = document.getElementById('barChart');
+  if (!canvas) return;
+
+  const now  = new Date();
+  const to   = now.toISOString().split('T')[0];
+  const from = new Date(now.getFullYear(), now.getMonth() - 11, 1).toISOString().split('T')[0];
+
+  let allDates = [];
+  try {
+    const data = await api(`/api/customers/0/refills/range?from=${from}&to=${to}`);
+    if (data.ok) {
+      data.data.forEach(r => {
+        if (r.refill_dates) allDates.push(...r.refill_dates.split('||'));
+      });
+    }
+  } catch (_) {}
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const labels = [], counts = [];
+  for (let i = 11; i >= 0; i--) {
+    const d  = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yy = String(d.getFullYear());
+    labels.push({ short: MONTHS[d.getMonth()], year: "'" + yy.slice(2) });
+    counts.push(allDates.filter(iso => {
+      const dt = new Date(iso);
+      return String(dt.getMonth() + 1).padStart(2, '0') === mm && String(dt.getFullYear()) === yy;
+    }).length);
+  }
+
+  const maxV   = Math.max(...counts, 1);
+  const W      = Math.max(canvas.parentElement.offsetWidth - 8, 300);
+  const H      = 260;
+  const pad    = { top: 28, right: 10, bottom: 60, left: 34 };
+  const chartW = W - pad.left - pad.right;
+  const chartH = H - pad.top - pad.bottom;
+  const gap    = chartW / labels.length;
+  const barW   = Math.max(Math.floor(gap * 0.6), 8);
+
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  for (let i = 0; i <= 4; i++) {
+    const y   = pad.top + (chartH / 4) * i;
+    const val = Math.round(maxV - (maxV / 4) * i);
+    ctx.strokeStyle = '#edf2f7'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + chartW, y); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(val, pad.left - 4, y + 4);
+  }
+  ctx.strokeStyle = '#d1d5db'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top + chartH); ctx.lineTo(pad.left + chartW, pad.top + chartH); ctx.stroke();
+
+  counts.forEach((cnt, i) => {
+    const cx = pad.left + gap * i + gap / 2;
+    const x  = cx - barW / 2;
+    const bH = Math.max((cnt / maxV) * chartH, cnt > 0 ? 3 : 0);
+    const y  = pad.top + chartH - bH;
+    const r  = Math.min(4, barW / 2);
+    const grad = ctx.createLinearGradient(0, y, 0, y + bH);
+    grad.addColorStop(0, '#60a5fa'); grad.addColorStop(1, '#1d4ed8');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + barW - r, y);
+    ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+    ctx.lineTo(x + barW, y + bH); ctx.lineTo(x, y + bH); ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath(); ctx.fill();
+    if (cnt > 0) {
+      ctx.fillStyle = '#1e40af'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(cnt, cx, y - 5);
+    }
+    ctx.save();
+    ctx.translate(cx, pad.top + chartH + 8); ctx.rotate(-Math.PI / 4);
+    ctx.fillStyle = '#6b7280'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(labels[i].short + labels[i].year, 0, 0);
+    ctx.restore();
+  });
+}
+
+// ============================================================
+//  CUSTOMER ACTIONS
+// ============================================================
+async function doRefill(id) {
+  try {
+    const data = await api(`/api/customers/${id}/refills`, {
+      method: 'POST',
+      body: { refilled_at: new Date().toISOString() }
+    });
+    if (!data.ok) { showToast('❌ ' + data.error); return; }
+    await loadData();
+    showToast('✅ Refill recorded');
+  } catch (err) { showToast('❌ Failed to record refill.'); }
+}
+
+async function showHistory(id) {
+  curHistId = id;
+  document.getElementById('histModal').style.display = 'block';
+  document.getElementById('proofView').innerHTML      = '';
+  document.getElementById('histRows').innerHTML       = '<p style="text-align:center;color:#aaa;padding:20px">Loading…</p>';
+
+  try {
+    const data = await api(`/api/customers/${id}`);
+    if (!data.ok) { showToast('❌ ' + data.error); return; }
+    const cust    = data.data;
+    const history = cust.history || [];
+
+    document.getElementById('proofView').innerHTML = cust.paper_photo_data
+      ? `<img src="${cust.paper_photo_data}" style="width:100%;border-radius:10px;border:1px solid #ddd;margin-bottom:10px">`
+      : `<p style="color:#888;text-align:center;margin-bottom:10px">No Document Image</p>`;
+
+    if (!history.length) {
+      document.getElementById('histRows').innerHTML = '<p style="text-align:center;color:#aaa;padding:20px">No refill records yet.</p>';
+      return;
+    }
+
+    document.getElementById('histRows').innerHTML = history.map(log => `
+      <div style="padding:10px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center">
+       <span style="font-size:13px">⛽ ${fmtDateTime(log.refilled_at)}${log.note ? ' — ' + h(log.note) : ''}</span>
+       <button onclick="delLog(${log.id})" style="color:red;border:none;background:none;font-weight:700;cursor:pointer;font-size:12px">DEL</button>
+      </div>`).join('');
+  } catch (err) { showToast('❌ Failed to load history.'); }
+}
+
+async function delLog(logId) {
+  if (!confirm('Delete this refill log?')) return;
+  try {
+    const data = await api(`/api/customers/${curHistId}/refills/${logId}`, { method: 'DELETE' });
+    if (!data.ok) { showToast('❌ ' + data.error); return; }
+    showHistory(curHistId);
+    loadData();
+    showToast('🗑 Log deleted');
+  } catch (err) { showToast('❌ Failed to delete log.'); }
+}
+
+async function delCust(id) {
+  if (!confirm('Delete this customer and all their refill history?')) return;
+  try {
+    const data = await api(`/api/customers/${id}`, { method: 'DELETE' });
+    if (!data.ok) { showToast('❌ ' + data.error); return; }
+    await loadData();
+    showToast('🗑 Customer deleted');
+  } catch (err) { showToast('❌ Failed to delete customer.'); }
+}
+
+// ============================================================
+//  ENTRY MODAL — Add / Edit Customer
+// ============================================================
+function openEntryModal(id = -1) {
+  document.getElementById('entryModal').style.display = 'block';
+  document.getElementById('idx').value = id;
+  if (id === -1) {
+    document.querySelectorAll('#entryModal input:not([type=hidden]),#entryModal textarea,#entryModal select')
+      .forEach(el => el.value = '');
+  } else {
+    const d = db.find(x => x.id === id);
+    if (!d) return;
+    document.getElementById('eName').value    = d.name || '';
+    document.getElementById('eCid').value     = d.cid || '';
+    document.getElementById('ePhone').value   = d.phone || '';
+    document.getElementById('eAddon').value   = d.addon || '';
+    document.getElementById('eAddress').value = d.address || '';
+    document.getElementById('ePipe').value    = d.pipe_expiry ? d.pipe_expiry.split('T')[0] : '';
+    document.getElementById('ePaper').value   = d.paper_loc || 'My Home';
+    document.getElementById('eBuyDate').value = d.buy_date ? d.buy_date.split('T')[0] : '';
+  }
+}
+function closeEntryModal() { document.getElementById('entryModal').style.display = 'none'; }
+
+async function saveEntry() {
+  const id  = parseInt(document.getElementById('idx').value);
+  const p1  = await compress(document.getElementById('photo').files[0]);
+  const p2  = await compress(document.getElementById('paperPhoto').files[0]);
+  const d   = id >= 0 ? db.find(x => x.id === id) : null;
+
+  const body = {
+    name:             document.getElementById('eName').value,
+    cid:              document.getElementById('eCid').value,
+    phone:            document.getElementById('ePhone').value,
+    addon:            document.getElementById('eAddon').value,
+    address:          document.getElementById('eAddress').value,
+    pipe_expiry:      document.getElementById('ePipe').value || null,
+    paper_loc:        document.getElementById('ePaper').value,
+    buy_date:         document.getElementById('eBuyDate').value || null,
+    photo_data:       p1 || (d ? d.photo_data : null),
+    paper_photo_data: p2 || (d ? d.paper_photo_data : null),
+  };
+
+  try {
+    const data = id >= 0
+      ? await api(`/api/customers/${id}`, { method: 'PUT',  body })
+      : await api('/api/customers',        { method: 'POST', body });
+
+    if (!data.ok) { showToast('❌ ' + data.error); return; }
+    closeEntryModal();
+    await loadData();
+    showToast('💾 Saved!');
+  } catch (err) { showToast('❌ Save failed. Check connection.'); }
+}
+
+function clearImg(type) {
+  if (!confirm('Clear this image?')) return;
+  document.getElementById(type).value = '';
+  const id = parseInt(document.getElementById('idx').value);
+  if (id >= 0) {
+    const d = db.find(x => x.id === id);
+    if (!d) return;
+    api(`/api/customers/${id}`, {
+      method: 'PUT',
+      body: {
+        name: d.name, cid: d.cid, phone: d.phone, addon: d.addon,
+        address: d.address, pipe_expiry: d.pipe_expiry, paper_loc: d.paper_loc, buy_date: d.buy_date,
+        photo_data:       type === 'photo'      ? null : d.photo_data,
+        paper_photo_data: type === 'paperPhoto' ? null : d.paper_photo_data
+      }
+    }).then(loadData);
+  }
+}
+
+async function compress(file) {
+  if (!file) return null;
+  return new Promise(res => {
+    const reader = new FileReader(); reader.readAsDataURL(file);
+    reader.onload = e => {
+      const img = new Image(); img.src = e.target.result;
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        const s = Math.min(1, 400 / img.width);
+        c.width = img.width * s; c.height = img.height * s;
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        res(c.toDataURL('image/jpeg', .7));
+      };
+    };
+  });
+}
+
+// ============================================================
+//  EXPORT / PRINT
+// ============================================================
+function generatePDF() {
+  const ids = Array.from(document.querySelectorAll('.sel-box:checked')).map(cb => parseInt(cb.dataset.id));
+  if (!ids.length) { alert('Select records first!'); return; }
+  let html = '<div style="text-align:center"><h2>Service Report</h2><hr></div>';
+  db.filter(r => ids.includes(r.id)).forEach(r => {
+    html += `<div class="print-card">
+      <div class="print-imgs"><img src="${r.photo_data || ''}"> ${r.paper_photo_data ? `<img src="${r.paper_photo_data}">` : ''}</div>
+      <div class="print-details"><b>${r.name}</b><br>ID: ${r.cid}<br>Ph: ${r.phone}<br>Add-On: ${r.addon || 'None'}<br>Paper: ${r.paper_loc}<br>Buy: ${fmtDate(r.buy_date)} | Exp: ${fmtDate(r.pipe_expiry)}<br>Addr: ${r.address}</div>
+      <div class="print-history"><b>Refills:</b> ${r.refill_count || 0} total · Last: ${r.last_refill ? fmtDateTime(r.last_refill) : 'None'}</div>
+    </div>`;
+  });
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+}
+
+async function exportToZip() {
+  const json = JSON.stringify(db, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `GasBackup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  showToast('📦 Backup saved!');
+}
+
+// ============================================================
+//  IMPORT  (migrates old local backups into the backend DB)
+// ============================================================
+let _impParsedData = null, _impZipEntries = null, _impSelectedFile = null;
+
+async function previewImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  document.getElementById('importModal').style.display       = 'block';
+  document.getElementById('impFileName').textContent         = file.name;
+  document.getElementById('impFileMeta').textContent         = (file.size / 1024).toFixed(1) + ' KB';
+  document.getElementById('impFileIcon').textContent         = file.name.endsWith('.zip') ? '📦' : '📄';
+  document.getElementById('impZipSection').style.display     = 'none';
+  document.getElementById('impPreview').style.display        = 'none';
+  document.getElementById('impError').style.display          = 'none';
+  document.getElementById('impConfirmBtn').disabled          = true;
+  _impParsedData = null; _impZipEntries = null; _impSelectedFile = null;
+
+  try {
+    if (file.name.endsWith('.zip')) {
+      _impZipEntries = await readZipNative(file);
+      const jsonEntries = _impZipEntries.filter(e => e.name.endsWith('.json'));
+      if (!jsonEntries.length) { setImpError('No JSON file found in ZIP.'); return; }
+      if (jsonEntries.length === 1) {
+        const parsed = smartParseJSON(jsonEntries[0].text);
+        if (parsed) setImpReady(parsed); else setImpError('Invalid JSON in ZIP.');
+      } else {
+        document.getElementById('impZipSection').style.display = 'block';
+        document.getElementById('impZipFiles').innerHTML = jsonEntries.map((e, i) =>
+          `<div style="padding:8px 12px;cursor:pointer;font-size:13px" onclick="onZipEntrySelect(${i})">📄 ${e.name}</div>`
+        ).join('');
+      }
+      return;
+    }
+    const text   = await file.text();
+    const parsed = smartParseJSON(text);
+    if (parsed) setImpReady(parsed);
+    else setImpError(`"${file.name}" doesn't contain valid Gas Manager data.`);
+  } catch (err) { setImpError('Error: ' + err.message); }
+}
+
+async function onZipEntrySelect(idx) {
+  _impSelectedFile = idx;
+  document.getElementById('impPreview').style.display = 'none';
+  document.getElementById('impError').style.display   = 'none';
+  document.getElementById('impConfirmBtn').disabled   = true;
+  const entry = _impZipEntries[idx];
+  if (entry.error) { setImpError(`"${entry.name}": ${entry.error}`); return; }
+  if (entry.text === null) { setImpError(`Cannot read "${entry.name}".`); return; }
+  const parsed = smartParseJSON(entry.text);
+  if (parsed) setImpReady(parsed);
+  else setImpError(`"${entry.name}" doesn't contain valid Gas Manager data.`);
+}
+
+function setImpReady(parsed) {
+  if (!Array.isArray(parsed)) { setImpError('Invalid format — expected a JSON array.'); return; }
+  _impParsedData = parsed;
+  document.getElementById('impPreviewText').innerHTML = `✅ <b>${parsed.length}</b> record${parsed.length !== 1 ? 's' : ''} found — will be uploaded to server`;
+  document.getElementById('impPreview').style.display = 'block';
+  document.getElementById('impError').style.display   = 'none';
+  document.getElementById('impConfirmBtn').disabled   = false;
+}
+
+function setImpError(msg) {
+  document.getElementById('impErrorText').textContent = '❌ ' + msg;
+  document.getElementById('impError').style.display   = 'block';
+  document.getElementById('impPreview').style.display = 'none';
+  document.getElementById('impConfirmBtn').disabled   = true;
+}
+
+async function confirmImport() {
+  if (!_impParsedData) { showToast('⚠ Nothing to import'); return; }
+  let added = 0, failed = 0;
+
+  for (const item of _impParsedData) {
+    try {
+      // Map old localStorage field names → new API field names
+      const body = {
+        name:             item.name,
+        cid:              item.cid || '',
+        phone:            item.phone || '',
+        address:          item.address || '',
+        addon:            item.addon || '',
+        buy_date:         item.buyDate    || item.buy_date    || null,
+        pipe_expiry:      item.pipe       || item.pipe_expiry || null,
+        paper_loc:        item.paper      || item.paper_loc   || 'My Home',
+        photo_data:       item.photo      || item.photo_data  || null,
+        paper_photo_data: item.paperImg   || item.paper_photo_data || null,
+      };
+      const res = await api('/api/customers', { method: 'POST', body });
+      if (!res.ok) { failed++; continue; }
+      added++;
+
+      // Upload old refill history entries
+      if (Array.isArray(item.history)) {
+        for (const log of item.history) {
+          let iso = new Date().toISOString();
+          if (typeof log === 'string') {
+            const [datePart, timePart] = log.split(', ');
+            const [dd, mm, yyyy] = datePart.split('/');
+            if (yyyy) iso = `${yyyy}-${mm}-${dd}T${timePart || '00:00'}:00`;
+          }
+          await api(`/api/customers/${res.id}/refills`, { method: 'POST', body: { refilled_at: iso } });
+        }
+      }
+    } catch (_) { failed++; }
+  }
+
+  closeImportModal();
+  await loadData();
+  showToast(`✅ ${added} imported${failed ? ' · ' + failed + ' failed' : ''}`);
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').style.display = 'none';
+  _impParsedData = null; _impZipEntries = null; _impSelectedFile = null;
+  document.getElementById('importFile').value = '';
+}
+
+// ============================================================
+//  MISC HELPERS
+// ============================================================
+function switchListTab(t) {
+  listTab = t;
+  document.getElementById('ltAll').classList.toggle('active', t === 'all');
+  document.getElementById('ltExp').classList.toggle('active', t === 'expired');
+  renderList();
+}
+
+function enableSelMode()  { selMode = true;  document.getElementById('printBar').style.display = 'flex'; renderList(); }
+function disableSelMode() { selMode = false; document.getElementById('printBar').style.display = 'none'; renderList(); }
+function toggleSelAll()   { const c = document.getElementById('selAll').checked; document.querySelectorAll('.sel-box').forEach(cb => cb.checked = c); }
+function calcExpiry()     {
+  const d = document.getElementById('eBuyDate').value;
+  if (d) { let dt = new Date(d); dt.setFullYear(dt.getFullYear() + 5); document.getElementById('ePipe').value = dt.toISOString().split('T')[0]; }
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+let _tt;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  clearTimeout(_tt); _tt = setTimeout(() => t.style.display = 'none', 2600);
+}
+
+function h(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('secAnalysis').classList.contains('active')) drawBarChart();
+});
+
+// ============================================================
+//  SMART JSON / ZIP helpers (kept for import backward compat)
+// ============================================================
+function smartParseJSON(text) {
+  if (!text) return null;
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  try { const r = JSON.parse(text); if (Array.isArray(r) && r.length > 0) return r; } catch (_) {}
+  const arrIdx = text.indexOf('['), objIdx = text.indexOf('{');
+  let si = -1;
+  if (arrIdx >= 0 && objIdx >= 0) si = Math.min(arrIdx, objIdx);
+  else if (arrIdx >= 0) si = arrIdx;
+  else if (objIdx >= 0) si = objIdx;
+  if (si < 0 || si > 5000) return null;
+  try { const r = JSON.parse(text.slice(si)); if (Array.isArray(r) && r.length > 0) return r; } catch (_) {}
+  const ei = text.lastIndexOf(']');
+  if (ei > si) { try { const r = JSON.parse(text.slice(si, ei + 1)); if (Array.isArray(r) && r.length > 0) return r; } catch (_) {} }
+  return null;
+}
+
+async function readZipNative(file) {
+  const buf = await file.arrayBuffer();
+  const view = new DataView(buf);
+  const u8   = new Uint8Array(buf);
+  const tdec = new TextDecoder('utf-8', { fatal: false });
+  let eocd = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65558); i--) {
+    if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('Not a ZIP (EOCD not found)');
+  const cdCount  = view.getUint16(eocd + 8,  true);
+  const cdOffset = view.getUint32(eocd + 16, true);
+  const results  = [];
+  let pos = cdOffset;
+  for (let i = 0; i < cdCount; i++) {
+    if (view.getUint32(pos, true) !== 0x02014b50) break;
+    const method   = view.getUint16(pos + 10, true);
+    const compSize = view.getUint32(pos + 20, true);
+    const uncompSz = view.getUint32(pos + 24, true);
+    const fnLen    = view.getUint16(pos + 28, true);
+    const exLen    = view.getUint16(pos + 30, true);
+    const cmtLen   = view.getUint16(pos + 32, true);
+    const lfhOff   = view.getUint32(pos + 42, true);
+    const name     = tdec.decode(u8.slice(pos + 46, pos + 46 + fnLen));
+    pos += 46 + fnLen + exLen + cmtLen;
+    if (name.endsWith('/')) continue;
+    if (view.getUint32(lfhOff, true) !== 0x04034b50) continue;
+    const lfhFnLen  = view.getUint16(lfhOff + 26, true);
+    const lfhExLen  = view.getUint16(lfhOff + 28, true);
+    const dataStart = lfhOff + 30 + lfhFnLen + lfhExLen;
+    const compData  = u8.slice(dataStart, dataStart + compSize);
+    let text = null, error = null;
+    try {
+      if (method === 0)      { text = tdec.decode(compData); }
+      else if (method === 8) { text = await inflateToText(compData, tdec); }
+      else                   { error = `Unsupported compression method ${method}`; }
+    } catch (e) { error = e.message; }
+    results.push({ name, text, size: uncompSz, error });
+  }
+  return results;
+}
+
+async function inflateToText(compData, tdec) {
+  if (typeof DecompressionStream === 'undefined') throw new Error('DecompressionStream not available');
+  const ds = new DecompressionStream('deflate-raw');
+  const writer = ds.writable.getWriter();
+  writer.write(compData); writer.close();
+  const reader = ds.readable.getReader();
+  const chunks = [];
+  for (;;) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); }
+  let total = 0;
+  for (const c of chunks) total += c.length;
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { out.set(c, off); off += c.length; }
+  return tdec.decode(out);
+}
+
+// ============================================================
+//  INIT — wire events + auto-restore session on page load
+// ============================================================
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('tabLogin') .addEventListener('click', () => switchTab2('login'));
+  document.getElementById('tabSignup').addEventListener('click', () => switchTab2('signup'));
+  document.getElementById('btnDoLogin') .addEventListener('click', doLogin);
+  document.getElementById('btnDoSignup').addEventListener('click', doSignup);
+  document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('suPass2')  .addEventListener('keydown', e => { if (e.key === 'Enter') doSignup(); });
+  document.getElementById('loginUser').addEventListener('input',   function () { checkOwner(this.value); });
+
+  // ── Auto-restore session if a token exists in localStorage ──
+  if (authToken) {
+    fetch(API_BASE + '/api/auth/me', {
+      headers: { Authorization: 'Bearer ' + authToken }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) { localStorage.removeItem('gmp_token'); authToken = ''; return; }
+      curRole = data.role; curLoggedName = data.name || data.username; curLoggedUser = data.username;
+      if (data.role === 'owner') {
+        document.getElementById('authScreen').style.display  = 'none';
+        document.getElementById('ownerPanel').style.display  = 'block';
+        renderOwner();
+      } else {
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display    = 'block';
+        document.getElementById('appUserName').textContent  = curLoggedName;
+        const today    = new Date().toISOString().split('T')[0];
+        const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+        document.getElementById('anFrom').value = monthAgo;
+        document.getElementById('anTo').value   = today;
+        loadData();
+      }
+    })
+    .catch(() => { localStorage.removeItem('gmp_token'); authToken = ''; });
+  }
+});
+</script>
+</body>
+</html>
